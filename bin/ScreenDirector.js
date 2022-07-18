@@ -252,10 +252,8 @@ class SceneAsset3D extends THREE.Object3D{
 */
 class SceneAssets{
   active_cam;
-  scene;
-  ui_scene;
-  renderer;
-  ui_renderer;
+  scene; ui_scene;
+  renderer; ui_renderer;
   controls = {};
 
   // Grouping Arrays... Add models here to isolate unrelated items during processing (ie. Click / Tap events)

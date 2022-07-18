@@ -2,10 +2,7 @@ import * as THREE from './lib/three.min.js';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from './jsm/controls/OrbitControls.js';
 import { FirstPersonControls } from './jsm/controls/FirstPersonControls.js';
-import { RectAreaLightUniformsLib } from './jsm/lights/RectAreaLightUniformsLib.js';
-import { RectAreaLightHelper } from './jsm/helpers/RectAreaLightHelper.js';
 import { SceneAssets as _SceneAssets, SceneAsset3D } from './bin/ScreenDirector.js';
-import TWEEN from '@tweenjs/tween.js';
 import GUI from 'lil-gui';
 
 // Constant Definitions
@@ -29,8 +26,6 @@ const VIEW = {
 
 
 class SceneAssets extends _SceneAssets{
-
-
   backgroundSceneryGenerator = ( star_count )=>{
 
     // Background Stars
@@ -54,8 +49,6 @@ class SceneAssets extends _SceneAssets{
     Array( star_count ).fill().forEach( addStar );
     return _stars;
   };
-
-
   actors = {
 
     // Jumping Cube
@@ -567,9 +560,6 @@ class SceneAssets extends _SceneAssets{
     }
 
   }
-
-
-
   lights = {
     get point_light(){
       delete this.point_light;
@@ -587,7 +577,6 @@ class SceneAssets extends _SceneAssets{
     }
   };
   cameras;
-
   actions = {
     warp_to: async ( planetary_body, equidistant_orbit = true ) =>{
       // Find yourself.
@@ -892,7 +881,6 @@ class SceneAssets extends _SceneAssets{
       this.active_cam.name = cam_name;
     }
   };
-
   backgroundScenery = ()=>{ return this.backgroundSceneryGenerator() };
   SetSceneBackground = ( )=>{
 
@@ -901,7 +889,6 @@ class SceneAssets extends _SceneAssets{
 				let textureCube = loader.load( [ 'corona_lf.png', 'corona_rt.png', 'corona_up_2.png', 'corona_dn_2.png', 'corona_ft.png', 'corona_bk.png'   ] );
 				this.scene.background = textureCube;
   };
-
   direct = ( delta )=>{
 
     let warp_speed = this.scene.updates.cache.warp_speed;
@@ -912,7 +899,6 @@ class SceneAssets extends _SceneAssets{
       } );
     } );
   }
-
   constructor(){
     super();
 
