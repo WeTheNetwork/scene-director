@@ -2,12 +2,10 @@
 import { ScreenDirector } from './bin/ScreenDirector.js' ;
 
 // ScreenDirector Implementation Library
-import Screenplay from  './implementation/Screenplay.js' ;
-import SceneAssets from  './implementation/SceneAssets.js' ;
-import SceneDirections from  './implementation/SceneDirections.js' ;
-import Manifesto from  './implementation/Manifesto.js' ;
-import Workflow from  './implementation/Workflow.js' ;
-
+import { Screenplay } from  './implementation/Screenplay.js' ;
+import { SceneDirections } from  './implementation/SceneDirections.js' ;
+import { Manifesto from } './implementation/Manifesto.js' ;
+import { Workflow } from  './implementation/Workflow.js' ;
 
 let app = {};
 app.init = ()=>{
@@ -22,9 +20,8 @@ app.init = ()=>{
   };
 
   // Scene Director Implementation
-  const scene_assets = new SceneAssets();
+  const screen_play = new Screenplay( );
   const scene_directions = new SceneDirections();
-  const screen_play = new Screenplay( scene_assets, scene_directions );
   const workflow = new Workflow();
   const manifesto = new Manifesto( scene_directions, workflow );
 

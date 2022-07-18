@@ -65,10 +65,10 @@ class ScreenDirector extends EventEmitter {
 
         // Run Entry Directions
         let dictum = this.manifesto[dictum_name];
-        await dictum.directions.on_enter(this.screenplay.scene_assets);
+        await dictum.directions.on_enter(this.screenplay);
 
         // Begin Idle Directions while continuing on to the dictum logic.
-        dictum.directions.on_idle(this.screenplay.scene_assets);
+        dictum.directions.on_idle(this.screenplay);
 
         // Run the dictum logic
         let logic_count = 0;
@@ -76,7 +76,7 @@ class ScreenDirector extends EventEmitter {
         if(Array.isArray(dictum.logic)){     // Differentiate between singular functions and function arrays
           logic_count = dictum.logic.length;
           for(let ndx=0; ndx<dictum.logic.length;ndx++){
-            let logic_response = await dictum.logic[ndx]( this.screenplay.scene_assets ); // Wait on the response for this dictum logic algorithm before moving to the next in the array... NOTE: Must be a valid thing to pass on to the _progress event.
+            let logic_response = await dictum.logic[ndx]( this.screenplay ); // Wait on the response for this dictum logic algorithm before moving to the next in the array... NOTE: Must be a valid thing to pass on to the _progress event.
             this.emit(`${dictum_name}_progress`, dictum_name, logic_count, logic_response);  // Emit the progress event for this dictum... along with how many there are to expect.
           }
         } else {
@@ -93,23 +93,23 @@ class ScreenDirector extends EventEmitter {
         dictum.progress.completed++;
         if(response) {
           // Run Logic Progression directions
-          await dictum.directions.on_progress(this.screenplay.scene_assets);
+          await dictum.directions.on_progress(this.screenplay );
           dictum.progress.passed++;
           if(dictum.progress.passed === count) {
             // Perform the 'on_end' directions prior to confirming it and progressing on.
             if(Array.isArray(dictum.directions.on_end)){  // Differentiate between singular functions and function arrays
               for(let ndx=0;ndx<dictum.directions.on_end.length;ndx++){
-                await dictum.directions.on_end[ndx](this.screenplay.scene_assets); // Wait for the directions to complete before moving on to the next one.
+                await dictum.directions.on_end[ndx]( this.screenplay ); // Wait for the directions to complete before moving on to the next one.
               }
             } else {
-              await dictum.directions.on_end(this.screenplay.scene_assets);  // Wait for the directions to complete before moving on to confirm the step.
+              await dictum.directions.on_end( this.screenplay );  // Wait for the directions to complete before moving on to confirm the step.
             }
             // Confirm this dictum step if all have passed successfully.
             this.emit('confirm_dictum', dictum_name);
           }
         } else {
           dictum.progress.failed++;  // Mark this as failed.
-          await dictum.directions.on_failure(this.screenplay.scene_assets);
+          await dictum.directions.on_failure( this.screenplay );
         }
         // If there is a failure during this dictum step, then emit a failure... else it would have been confirmed above.
         // NOTE: Failure will need to progress or return to complete the step.
@@ -190,8 +190,9 @@ class ScreenDirector extends EventEmitter {
 */
 class Screenplay{
   ENTIRE_SCENE = 0;
-  scene_assets; scene_directions; scenes;
-  clock; delta; fps; interval; raycaster; mouse; warp_speed;
+  active_cam;
+  scene_assets; scene; ui_scene; renderer; ui_renderer;
+  clock; delta; fps; interval; raycaster; mouse;
 
   animate = ()=>{
     requestAnimationFrame( this.animate );
@@ -204,56 +205,6 @@ class Screenplay{
       this.delta = this.delta % this.interval;
     }
   }
-
-  constructor( scene_assets, scene_directions ){
-    this.scene_assets = scene_assets;
-    this.scene_directions = scene_directions;
-    this.scenes = new Map();
-
-    // Internal Clock
-    // TODO: Set this to a configuration value
-    const clock = new THREE.Clock();
-    this.clock = clock;
-    let delta = 0;
-    this.delta = delta;
-    let fps = 30;
-    let interval = 1 / fps;
-    this.interval = interval;
-
-    // Mouse Interaction Capture
-    const raycaster = new THREE.Raycaster();
-    this.raycaster = raycaster;
-    const mouse = new THREE.Vector2();
-    this.mouse = mouse;
-  }
-}
-
-// SceneAsset3D //
-/* ------------
-  In order to optimize the Animate() phase of the ScreenPlay, SceneAsset3D objects own the directions they will be performing... to be called on-demand by the ScreenDirector.
-  Analogous to an actor in real-life learning their part of the production... their Director then simply calls upon them to perform it when the time comes.
-*/
-class SceneAsset3D extends THREE.Object3D{
-  directions;  // Override this with a custom set of functions to be called by the ScreenDirector during the Animate() run of the Screenplay.
-  click = ()=>{};
-
-  constructor( obj3D = new THREE.Object3D() ){
-    obj3D.directions = new Map();
-    obj3D.click = ()=>{};
-    return obj3D;
-  }
-}
-
-// SceneAssets //
-/* -----------
-  Here lies the definitions to generate a 3-Dimensional space to use as their app environment.
-  From the distant scenery and backgrounds, to the lights cameras, actions and actors... etc.
-  This holds all of the details necessary to accompany the SceneDirections in the Screenplay.
-*/
-class SceneAssets{
-  active_cam;
-  scene; ui_scene;
-  renderer; ui_renderer;
   controls = {};
 
   // Grouping Arrays... Add models here to isolate unrelated items during processing (ie. Click / Tap events)
@@ -261,9 +212,7 @@ class SceneAssets{
   actives = [];
   interactives = [];  // Populate this with the rendered objects which the user may interact with... improving the efficiency of the Raycaster.
 
-  props = {}; // Props are objects without animation directions of their own... though animation may occur, it must be done to it, not called to be done during Animate().
   actors = {};  // Actors are SceneAsset3D objects which are defined with callable directions, whether cosmetic or complex routines, called by the ScreenDirector during Animate().
-  locations;
 
   // Standard-Issue Hollywood Magic Makers
   lights = {};  // Any scene needs light to be... seen.
@@ -292,7 +241,6 @@ class SceneAssets{
 
   render = ()=>{
     this.renderer.render( this.scene, this.active_cam );
-
   }
 
   ui_render = ()=>{
@@ -309,9 +257,25 @@ class SceneAssets{
     this.ui_renderer.setSize( window.innerWidth, window.innderHeight );
   }
 
-  constructor(){
+  constructor( ){
+
+    // Internal Clock
+    // TODO: Set this to a configuration value
+    const clock = new THREE.Clock();
+    this.clock = clock;
+    let delta = 0;
+    this.delta = delta;
+    let fps = 30;
+    let interval = 1 / fps;
+    this.interval = interval;
+
+    // Mouse Interaction Capture
+    const raycaster = new THREE.Raycaster();
+    this.raycaster = raycaster;
+    const mouse = new THREE.Vector2();
+    this.mouse = mouse;
+
     this.updatables = new Map();
-    this.locations = new Map();
     this.cameras = new Map();
     this.active_cam = false;
     this.scene = new THREE.Scene();
@@ -340,6 +304,22 @@ class SceneAssets{
     ui_canvas.style.position = 'fixed';
     document.body.appendChild( ui_canvas );
     this.ui_renderer = ui_renderer;
+  }
+}
+
+// SceneAsset3D //
+/* ------------
+  In order to optimize the Animate() phase of the ScreenPlay, SceneAsset3D objects own the directions they will be performing... to be called on-demand by the ScreenDirector.
+  Analogous to an actor in real-life learning their part of the production... their Director then simply calls upon them to perform it when the time comes.
+*/
+class SceneAsset3D extends THREE.Object3D{
+  directions;  // Override this with a custom set of functions to be called by the ScreenDirector during the Animate() run of the Screenplay.
+  click = ()=>{};
+
+  constructor( obj3D = new THREE.Object3D() ){
+    obj3D.directions = new Map();
+    obj3D.click = ()=>{};
+    return obj3D;
   }
 }
 
@@ -378,10 +358,6 @@ class SceneDirections{
 */
 class Workflow{
 
-  controls = {
-
-  };
-
   constructor(){
   }
 }
@@ -417,4 +393,4 @@ class Manifesto{
 }
 
 
-module.exports { ScreenDirector, Screenplay, SceneAsset3D, SceneAssets, SceneDirections, Workflow, Dictum, Manifesto  };
+module.exports { ScreenDirector, Screenplay, SceneAsset3D, SceneDirections, Workflow, Dictum, Manifesto  };
