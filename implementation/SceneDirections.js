@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { SceneDirections as _SceneDirections } from './ScreenDirector.js';
+import * as THREE from './lib/three.min.js';
+import { SceneDirections as _SceneDirections } from './bin/ScreenDirector.js';
 import { CSS3DObject } from './jsm/renderers/CSS3DRenderer.js';
 
 class SceneDirections extends _SceneDirections {

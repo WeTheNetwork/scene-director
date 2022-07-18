@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from './lib/three.min.js';
 import { EventEmitter } from 'events';
 import { CSS3DRenderer } from './jsm/renderers/CSS3DRenderer.js';
 
@@ -419,4 +419,4 @@ class Manifesto{
 }
 
 
-export { ScreenDirector, Screenplay, SceneAsset3D, SceneAssets, SceneDirections, Workflow, Dictum, Manifesto  };
+module.exports { ScreenDirector, Screenplay, SceneAsset3D, SceneAssets, SceneDirections, Workflow, Dictum, Manifesto  };

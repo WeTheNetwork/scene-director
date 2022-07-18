@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { Screenplay as _Screenplay } from './ScreenDirector.js';
+import * as THREE from './lib/three.min.js';
+import { Screenplay as _Screenplay } from './bin/ScreenDirector.js';
 
 
 class Screenplay extends _Screenplay{

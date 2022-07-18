@@ -1,10 +1,10 @@
-import * as THREE from 'three';
-import { Manifesto as _Manifesto, Dictum } from './ScreenDirector.js';
+import * as THREE from './lib/three.min.js';
+import { Manifesto as _Manifesto, Dictum } from './bin/ScreenDirector.js';
 
 class Manifesto extends _Manifesto{
   constructor( scene_directions, workflow ){
     super( scene_directions, workflow );  // Though it doesn't do anything... it is necessary to make 'this' available.
-    
+
     this.Splash = new Dictum( [ workflow.confirm_privileges, workflow.verify_capabilities ],
       {
         on_enter: scene_directions.enter_splash,

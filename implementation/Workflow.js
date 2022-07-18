@@ -1,8 +1,7 @@
-import * as THREE from 'three';
+import * as THREE from './lib/three.min.js';
 import GUI from 'lil-gui';
-import TWEEN from '@tweenjs/tween.js';
 import { OrbitControls } from './jsm/controls/OrbitControls.js';
-import { Workflow as _Workflow } from './ScreenDirector.js';
+import { Workflow as _Workflow } from './bin/ScreenDirector.js';
 
 class Workflow extends _Workflow{
 

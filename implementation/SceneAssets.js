@@ -1,10 +1,10 @@
-import * as THREE from 'three';
+import * as THREE from './lib/three.min.js';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from './jsm/controls/OrbitControls.js';
 import { FirstPersonControls } from './jsm/controls/FirstPersonControls.js';
 import { RectAreaLightUniformsLib } from './jsm/lights/RectAreaLightUniformsLib.js';
 import { RectAreaLightHelper } from './jsm/helpers/RectAreaLightHelper.js';
-import { SceneAssets as _SceneAssets, SceneAsset3D } from './ScreenDirector.js';
+import { SceneAssets as _SceneAssets, SceneAsset3D } from './bin/ScreenDirector.js';
 import TWEEN from '@tweenjs/tween.js';
 import GUI from 'lil-gui';
 
