@@ -2,15 +2,31 @@
   "name": "scene-director",
   "version": "1.0.0",
   "description": "Scene Director serves as the digital equivalent to it's namesake, in between Three.js ( next to be agnostic ) and the HTML canvas.",
-  "main": "index.js",
-  "bin": {
-    "scene-director": "bin/ScreenDirector.js"
-  },
-  "directories": {
-    "lib": "lib"
+  "dependencies": {
+    "events": "^3.3.0",
+    "lil-gui": "^0.16.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "three": "^0.139.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "repository": {
     "type": "git",
