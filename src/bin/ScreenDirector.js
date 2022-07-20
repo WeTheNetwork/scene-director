@@ -23,8 +23,8 @@ class ScreenDirector extends EventEmitter {
     this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-    this.raycaster.setFromCamera( this.mouse, this.screenplay.scene_assets.active_cam );
-    const intersects = (this.screenplay.scene_assets.interactives && this.screenplay.scene_assets.interactives.length > 0) ? this.raycaster.intersectObjects( this.screenplay.scene_assets.interactives, false ) : [];
+    this.raycaster.setFromCamera( this.mouse, this.screenplay.active_cam );
+    const intersects = (this.screenplay.interactives && this.screenplay.interactives.length > 0) ? this.raycaster.intersectObjects( this.screenplay.interactives, false ) : [];
     if ( intersects.length > 0 ) {
 
 
@@ -191,7 +191,7 @@ class ScreenDirector extends EventEmitter {
 class Screenplay{
   ENTIRE_SCENE = 0;
   active_cam;
-  scene_assets; scene; ui_scene; renderer; ui_renderer;
+  scene; ui_scene; renderer; ui_renderer;
   clock; delta; fps; interval; raycaster; mouse;
 
   animate = ()=>{
