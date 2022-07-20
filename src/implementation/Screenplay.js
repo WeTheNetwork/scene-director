@@ -1,9 +1,11 @@
-import * as THREE from '../lib/three.min.js';
+// ScreenDirector Reference
+import { Screenplay as _Screenplay, SceneAsset3D } from '../bin/ScreenDirector.js';
+// Support Library Reference
+import GUI from 'lil-gui';
+import * as THREE from 'three';
 import { GLTFLoader } from '../lib/GLTFLoader.js';
 import { OrbitControls } from '../lib/OrbitControls.js';
 import { FirstPersonControls } from '../lib/FirstPersonControls.js';
-import { Screenplay as _Screenplay, SceneAsset3D } from '../bin/ScreenDirector.js';
-import GUI from 'lil-gui';
 
 // Constant Definitions
 const LIGHT = {
@@ -24,6 +26,7 @@ const VIEW = {
   far: 100000000000000
 };
 
+// Screenplay Implementation
 class Screenplay extends _Screenplay{
   actors = {
 
@@ -112,8 +115,8 @@ class Screenplay extends _Screenplay{
     super( );
 
     // Camera & Controls Setup
-    this.active_cam = new THREE.PerspectiveCamera( VIEW.fov, VIEW.aspect, VIEW.near, VIEW.far );
-    this.active_cam.name = 'ActiveCam';
+    this.active_cam = this.cameras.camera_a = new THREE.PerspectiveCamera( VIEW.fov, VIEW.aspect, VIEW.near, VIEW.far );
+    this.cameras.camera_a.name = 'ActiveCam';
   }
 }
 

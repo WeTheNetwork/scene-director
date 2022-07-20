@@ -1,4 +1,4 @@
-import * as THREE from '../lib/three.min.js';
+import * as THREE from 'three';
 import { EventEmitter } from 'events';
 import { CSS3DRenderer } from '../lib/CSS3DRenderer.js';
 
@@ -6,15 +6,15 @@ import { CSS3DRenderer } from '../lib/CSS3DRenderer.js';
 /* ------------------
   Aware of the environment ( Window, Document, User Interface API, SceneAssets ), to the extent necessary to create a seemlessly animated web interface.
   Scenes are complex, orchestrated animations which are driven by the ScreenDirector to create a rich user experience for webapp interactions.
-  Use this to prepare the user-interface for interaction, then to drive the interaction through each entry in their manifesto.
+  Use this to prepare the user-interface for interaction, then to drive the interaction through each entry in your site's manifesto.
 */
 class ScreenDirector extends EventEmitter {
-  active_dictum = 0;
+  active_dictum = 0;  // State Awareness Variable
   dictum_index = [];  // Track the dictums by name in an array for efficient iteration control.
 
   start = function(){
-    this.screenplay.animate();
-    this.emit('first_dictum');
+    this.screenplay.animate();  // Kickstart the animation loop
+    this.emit('first_dictum');  // Begin the Manifesto
   }
 
   // GUI Interactions
@@ -45,7 +45,7 @@ class ScreenDirector extends EventEmitter {
     window.addEventListener( 'pointerdown', this.onPointerDown );
     window.addEventListener( 'resize', this.resize, { capture: true } );
 
-
+    debugger;
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
 

@@ -1,7 +1,10 @@
-import * as THREE from '../lib/three.min.js';
+// ScreenDirector Reference
 import { SceneDirections as _SceneDirections } from '../bin/ScreenDirector.js';
+// Support Library Reference
+import * as THREE from 'three';
 import { CSS3DObject } from '../lib/CSS3DRenderer.js';
 
+// ScreenDirections Implementation
 class SceneDirections extends _SceneDirections {
   enter_splash = async ( screenplay )=>{
     console.log('SceneDirections.enter_splash');

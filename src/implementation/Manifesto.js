@@ -1,6 +1,7 @@
-import * as THREE from '../lib/three.min.js';
+import * as THREE from 'three';
 import { Manifesto as _Manifesto, Dictum } from '../bin/ScreenDirector.js';
 
+// Manifesto Implementation
 class Manifesto extends _Manifesto{
   constructor( scene_directions, workflow ){
     super( scene_directions, workflow );  // Though it doesn't do anything... it is necessary to make 'this' available.

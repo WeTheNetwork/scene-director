@@ -1,8 +1,11 @@
-import * as THREE from '../lib/three.min.js';
-import GUI from 'lil-gui';
-import { OrbitControls } from '../lib/OrbitControls.js';
+// Screen Director Reference
 import { Workflow as _Workflow } from '../bin/ScreenDirector.js';
+// Support Library Reference
+import GUI from 'lil-gui';
+import * as THREE from 'three';
+import { OrbitControls } from '../lib/OrbitControls.js';
 
+// Workflow Implementation
 class Workflow extends _Workflow{
 
   ActivateOrbitControls = async ( screenplay )=>{
