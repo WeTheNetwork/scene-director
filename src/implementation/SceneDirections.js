@@ -72,7 +72,13 @@ class SceneDirections extends _SceneDirections {
   };
   end_scene_03 = async ( screenplay )=>{
    console.log('SceneDirections.end_scene_03');
-   screenplay.scene.background = new THREE.Color( 0xff0000 );
+   screenplay.scene.background = new THREE.Color( 0x444444 );
+   screenplay.scene.add( await screenplay.actors.jumping_cube );
+   screenplay.actors.jumping_cube.position.copy( new THREE.Vector3( 10, 10, 10 ));
+   var keyAnimationClip = THREE.AnimationClip.findByName( screenplay.actors.jumping_cube.animations, 'CubeAction.Jump' );
+   var action = screenplay.actors.jumping_cube.mixer.clipAction( keyAnimationClip );
+   action.play();
+   screenplay.active_cam.lookAt( screenplay.actors.jumping_cube.position );
   };
 }
 

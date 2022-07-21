@@ -47,12 +47,12 @@ class Screenplay extends _Screenplay{
 
     // Jumping Cube
     get jumping_cube(){
-      let loading = new Promise((resolve, reject)=>{
-        const loader = new GLTFLoader().setPath( 'models/' );
+      let loading = new Promise( (resolve, reject)=>{
+        const loader = new GLTFLoader().setPath( '/' );
         loader.load( 'jumping_cube.glb',
           async ( gltf )=>{
             let _jumping_cube = gltf.scene.children[0];
-            _jumping_cube.material = new THREE.MeshStandardMaterial( { color: LIGHT.green } );
+            _jumping_cube.material = new THREE.MeshStandardMaterial( { color: LIGHT.indoor } );
             _jumping_cube.animations = gltf.animations;
             _jumping_cube.name = "Jumping Cube";
             let jumping_cube = new SceneAsset3D( _jumping_cube );
@@ -61,8 +61,8 @@ class Screenplay extends _Screenplay{
             });
             jumping_cube.mixer = new THREE.AnimationMixer( jumping_cube );
             var keyAnimationClip = THREE.AnimationClip.findByName( jumping_cube.animations, 'CubeAction.Jump' );
-            var action = jumping_cube.mixer.clipAction( keyAnimationClip );
-            action.play();
+            //var action = jumping_cube.mixer.clipAction( keyAnimationClip );
+            //action.play();
             resolve( jumping_cube );
           },
           async function ( xhr ) {
@@ -74,7 +74,7 @@ class Screenplay extends _Screenplay{
             reject( err );
           }
         );
-      });
+      } );
 
 
       return (async () => {
@@ -102,26 +102,7 @@ class Screenplay extends _Screenplay{
   cameras;
   actions = {
     change_cam: async ( cam_name ) =>{
-      let _ship = this.actors.Ship;
-      let _cam = _ship.cameras.get( cam_name );
-      let _cam_pos = new THREE.Vector3();
-      _cam.getWorldPosition( _cam_pos );
-      this.active_cam.position.copy( _cam_pos );
-      let _target_pos = new THREE.Vector3();
-      switch( cam_name ){
-        case 'ConnCam':
-          _ship.conn_station.getWorldPosition( _target_pos );
-          break;
-        case 'OpsCam':
-          _ship.ops_station.getWorldPosition( _target_pos );
-          break;
-        case 'CaptainCam':
-          _ship.NavDots.sight_target.getWorldPosition( _target_pos );
-          break;
-      }
-      this.active_cam.lookAt( _target_pos );
-      this.active_cam.updateProjectionMatrix();
-      this.active_cam.name = cam_name;
+      
     }
   };
 
