@@ -10,15 +10,6 @@ import { Workflow } from  './implementation/Workflow.js' ;
 let app = {};
 app.init = ()=>{
 
-  // Initialization
-  const confirm_start = ( yes ) => {
-    if(yes || window.confirm('start loading?')){
-      scene_director.start();
-    } else {
-      setTimeout(confirm_start, 5000);
-    }
-  };
-
   // Scene Director Implementation
   const screen_play = new Screenplay( );
   const scene_directions = new SceneDirections();
@@ -28,7 +19,7 @@ app.init = ()=>{
   const scene_director = new ScreenDirector(screen_play, manifesto, false);
 
   // Main Logic
-  confirm_start( true );
+  scene_director.start();
 
 }
 

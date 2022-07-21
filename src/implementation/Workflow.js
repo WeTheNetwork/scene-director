@@ -7,6 +7,9 @@ import { OrbitControls } from '../lib/OrbitControls.js';
 
 // Workflow Implementation
 class Workflow extends _Workflow{
+  elevated_vars = {
+    "u_name": ""
+  }
 
   ActivateOrbitControls = async ( screenplay )=>{
     if( !screenplay.controls.orbit_controls ) {
@@ -33,22 +36,44 @@ class Workflow extends _Workflow{
 
   confirm_privileges = async ( screenplay ) => {
     console.log('Workflow.confirm_privileges');
+    let proceed = window.confirm('Scene Director Loaded: "Shall we proceed?"');
+    while( !proceed ){
+      let patience = (Math.random() * 10) > 5 ? true : false;
+      if( !patience ){
+        window.alert( 'Please?' );
+        proceed = true;
+      } else {
+        proceed = window.confirm('How about now?');
+      }
+    }
     return true;
   };
   verify_capabilities = async ( screenplay ) => {
     console.log( 'Workflow.verify_capabilities' );
-    return true;
+    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then( stream => {
+        window.localStream = stream; // A
+        window.localAudio.srcObject = stream; // B
+        window.localAudio.autoplay = true; // C
+    }).catch( err => {
+        console.log("u got an error:" + err)
+    }).finally( _ => {
+      return true;
+    });
   };
   introduction = async () => {
     console.log('Workflow.introduction');
+    window.alert( 'Howdy!  This is where I introduce myself.  Though it appears as though I am a basic page with archaic pop-up modals... I am actually an orchestrated set of directions which collaborate with the User Interface in order to perform elaborate animations during transitions; making it possible for you to create an immersive 3D worldscape for your online experience!' );
     return true;
   };
   user_introduction = async () => {
     console.log('Workflow.user_introduction');
+    let _x = this.elevated_vars.u_name = window.prompt( 'What name would you like to be known by?' );
+    this.elevated_vars.u_name = ( _x === null || _x.match(/[^\s]/gi) === null ) ? 'stranger' : _x;
     return true;
   };
   ready_for_user = async () => {
     console.log('Workflow.ready_for_user');
+    window.alert( `Okay ${ this.elevated_vars.u_name }, now I'm ready for you.` );
     return true;
   };
 }

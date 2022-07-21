@@ -45,7 +45,6 @@ class ScreenDirector extends EventEmitter {
     window.addEventListener( 'pointerdown', this.onPointerDown );
     window.addEventListener( 'resize', this.resize, { capture: true } );
 
-    debugger;
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
 
@@ -68,7 +67,7 @@ class ScreenDirector extends EventEmitter {
         await dictum.directions.on_enter(this.screenplay);
 
         // Begin Idle Directions while continuing on to the dictum logic.
-        dictum.directions.on_idle(this.screenplay);
+        await dictum.directions.on_idle(this.screenplay);
 
         // Run the dictum logic
         let logic_count = 0;
@@ -76,13 +75,17 @@ class ScreenDirector extends EventEmitter {
         if(Array.isArray(dictum.logic)){     // Differentiate between singular functions and function arrays
           logic_count = dictum.logic.length;
           for(let ndx=0; ndx<dictum.logic.length;ndx++){
-            let logic_response = await dictum.logic[ndx]( this.screenplay ); // Wait on the response for this dictum logic algorithm before moving to the next in the array... NOTE: Must be a valid thing to pass on to the _progress event.
-            this.emit(`${dictum_name}_progress`, dictum_name, logic_count, logic_response);  // Emit the progress event for this dictum... along with how many there are to expect.
+            let logic_response = dictum.logic[ndx]( this.screenplay ); // Wait on the response for this dictum logic algorithm before moving to the next in the array... NOTE: Must be a valid thing to pass on to the _progress event.
+            Promise.all( [ logic_response ] ).then( ()=>{
+              this.emit(`${dictum_name}_progress`, dictum_name, logic_count, logic_response);  // Emit the progress event for this dictum... along with how many there are to expect.
+            });
           }
         } else {
           logic_count = 1;
-          let logic_response = await dictum.logic( this.screenplay );  // Wait on the response to this dictum's one logic algorithm... NOTE: Must be a valid thing to pass on to the _progress event.
-          this.emit(`${dictum_name}_progress`, dictum_name, logic_count, logic_response); // Emit the progress event for this dictum... along with 1, how many there are to expect.
+          let logic_response = dictum.logic( this.screenplay );  // Wait on the response to this dictum's one logic algorithm... NOTE: Must be a valid thing to pass on to the _progress event.
+          Promise.all( [ logic_response ] ).then( ()=>{
+            this.emit(`${dictum_name}_progress`, dictum_name, logic_count, logic_response); // Emit the progress event for this dictum... along with 1, how many there are to expect.
+          });
         }
 
       });
@@ -93,19 +96,22 @@ class ScreenDirector extends EventEmitter {
         dictum.progress.completed++;
         if(response) {
           // Run Logic Progression directions
-          await dictum.directions.on_progress( this.screenplay );
+          dictum.directions.on_progress( this.screenplay );
           dictum.progress.passed++;
           if(dictum.progress.passed === count) {
             // Perform the 'on_end' directions prior to confirming it and progressing on.
+            let directions = [];
             if(Array.isArray(dictum.directions.on_end)){  // Differentiate between singular functions and function arrays
               for(let ndx=0;ndx<dictum.directions.on_end.length;ndx++){
-                await dictum.directions.on_end[ndx]( this.screenplay ); // Wait for the directions to complete before moving on to the next one.
+                directions.push( dictum.directions.on_end[ndx]( this.screenplay ) ); // Wait for the directions to complete before moving on to the next one.
               }
             } else {
-              await dictum.directions.on_end( this.screenplay );  // Wait for the directions to complete before moving on to confirm the step.
+              directions.push( dictum.directions.on_end( this.screenplay ) );  // Wait for the directions to complete before moving on to confirm the step.
             }
             // Confirm this dictum step if all have passed successfully.
-            this.emit('confirm_dictum', dictum_name);
+            Promise.all( directions ).then( _=>{
+              this.emit('confirm_dictum', dictum_name);
+            });
           }
         } else {
           dictum.progress.failed++;  // Mark this as failed.
@@ -232,7 +238,6 @@ class Screenplay{
 
   direct = ( delta )=>{
     this.actives.forEach( ( active, name )=>{
-      if( !active.directions ) debugger;
       active.directions.forEach( ( direction, name )=>{
         direction( delta );
       } );
@@ -287,7 +292,7 @@ class Screenplay{
     this.updatables.set('scene', this.scene.updates );
 
     // Scene Renderer
-    const renderer = new THREE.WebGLRenderer( { antialias: true, logarithmicDepthBuffer: true, physicallyCorrectLights: true } );
+    const renderer = new THREE.WebGLRenderer( { antialias: true, physicallyCorrectLights: true } );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -389,7 +394,7 @@ class Dictum{
 */
 class Manifesto{
   // NOTE: Though this constructor is not implemented, it is relevent to keep this for an explicit understanding of what is expected by the developer employing this solution.
-  constructor(scene_directions, workflow){}
+  constructor( scene_directions, workflow ){}
 }
 
 

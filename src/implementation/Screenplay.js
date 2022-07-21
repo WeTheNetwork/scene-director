@@ -23,12 +23,27 @@ const VIEW = {
   fov: 45,
   aspect: window.innerWidth / window.innerHeight,
   near: 0.1,
-  far: 100000000000000
+  far: 10000
 };
 
 // Screenplay Implementation
 class Screenplay extends _Screenplay{
   actors = {
+
+    // Lazy Getters
+    /*
+        The Screenplay contains ALL of the models which your site will EVER need to render.
+        Most applications will want to introduce models as needed, in order to optimize system resources.
+
+        asyncronous loaders are used to ensure that the system is not hung up on resource loading.
+        - ex: actors.jumping_cube()
+
+        syncronous loaders are used for loading any other assets.
+        - ex: lights.point_light()
+
+        Note: Delete the models initialization logic, replacing it with the initialized model object ( see any ).
+              This prevents the model from initializing multiple times.
+    */
 
     // Jumping Cube
     get jumping_cube(){
