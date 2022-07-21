@@ -48,7 +48,7 @@ class Screenplay extends _Screenplay{
     // Jumping Cube
     get jumping_cube(){
       let loading = new Promise( (resolve, reject)=>{
-        const loader = new GLTFLoader().setPath( '/' );
+        const loader = new GLTFLoader().setPath( '/models/' );
         loader.load( 'jumping_cube.glb',
           async ( gltf )=>{
             let _jumping_cube = gltf.scene.children[0];
@@ -102,7 +102,7 @@ class Screenplay extends _Screenplay{
   cameras;
   actions = {
     change_cam: async ( cam_name ) =>{
-      
+
     }
   };
 
