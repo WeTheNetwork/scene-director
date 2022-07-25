@@ -34,21 +34,21 @@ class Workflow extends _Workflow{
     screenplay.active_cam.user_control = false;
   }
 
-  confirm_privileges = async ( screenplay ) => {
+  confirm_privileges = async ( dictum_name, director, ndx ) => {
     console.log('Workflow.confirm_privileges');
     let proceed = window.confirm('Scene Director Loaded: "Shall we proceed?"');
-    while( !proceed ){
+    if( proceed ) director.emit( `${dictum_name}_progress`, dictum_name, ndx );
+    else {
       let patience = (Math.random() * 10) > 5 ? true : false;
       if( !patience ){
-        window.alert( 'Please?' );
-        proceed = true;
+        window.alert( 'Out of patience... proceeding.' );
+        director.emit( `${dictum_name}_failure`, dictum_name, ndx );
       } else {
-        proceed = window.confirm('How about now?');
+        director.emit( `${dictum_name}_progress`, dictum_name, ndx );
       }
     }
-    return true;
   };
-  verify_capabilities = async ( screenplay ) => {
+  verify_capabilities = async ( dictum_name, director, ndx ) => {
     console.log( 'Workflow.verify_capabilities' );
     navigator.mediaDevices.getUserMedia({video: true, audio: true}).then( stream => {
         window.localStream = stream; // A
@@ -57,24 +57,26 @@ class Workflow extends _Workflow{
     }).catch( err => {
         console.log("u got an error:" + err)
     }).finally( _ => {
-      return true;
+      director.emit( `${dictum_name}_progress`, dictum_name, ndx );
     });
   };
-  introduction = async () => {
+  introduction = async ( dictum_name, director, ndx ) => {
     console.log('Workflow.introduction');
     window.alert( 'Howdy!  This is where I introduce myself.  Though it appears as though I am a basic page with archaic pop-up modals... I am actually an orchestrated set of directions which collaborate with the User Interface in order to perform elaborate animations during transitions; making it possible for you to create an immersive 3D worldscape for your online experience!' );
-    return true;
+    setTimeout( (dictum_name, director, ndx)=>{
+      director.emit( `${dictum_name}_progress`, dictum_name, ndx );
+    }, 5000, dictum_name, director, ndx );
   };
-  user_introduction = async () => {
+  user_introduction = async ( dictum_name, director, ndx ) => {
     console.log('Workflow.user_introduction');
     let _x = this.elevated_vars.u_name = window.prompt( 'What name would you like to be known by?' );
     this.elevated_vars.u_name = ( _x === null || _x.match(/[^\s]/gi) === null ) ? 'stranger' : _x;
-    return true;
+    director.emit( `${dictum_name}_progress`, dictum_name, ndx );
   };
-  ready_for_user = async () => {
+  ready_for_user = async ( dictum_name, director, ndx ) => {
     console.log('Workflow.ready_for_user');
     window.alert( `Okay ${ this.elevated_vars.u_name }, now I'm ready for you.` );
-    return true;
+    director.emit( `${dictum_name}_progress`, dictum_name, ndx );
   };
 }
 
