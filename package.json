@@ -1,6 +1,6 @@
 {
   "name": "scene-director",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scene Director serves as the digital equivalent to it's namesake, in between Three.js ( next to be agnostic ) and the HTML canvas.",
   "dependencies": {
     "events": "^3.3.0",

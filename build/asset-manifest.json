@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/WeTheNetwork/scene-director/static/js/main.b5c2040a.js",
-    "index.html": "/WeTheNetwork/scene-director/index.html",
-    "main.b5c2040a.js.map": "/WeTheNetwork/scene-director/static/js/main.b5c2040a.js.map"
+    "main.js": "/static/js/main.22432d9b.js",
+    "index.html": "/index.html",
+    "main.22432d9b.js.map": "/static/js/main.22432d9b.js.map"
   },
   "entrypoints": [
-    "static/js/main.b5c2040a.js"
+    "static/js/main.22432d9b.js"
   ]
 }
