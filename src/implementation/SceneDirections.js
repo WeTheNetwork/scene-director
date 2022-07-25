@@ -15,6 +15,7 @@ class SceneDirections extends _SceneDirections {
   enter_splash = async ( screenplay, dictum_name, next_emit, director )=>{
     console.log('SceneDirections.enter_splash');
     screenplay.scene.add( screenplay.lights.ambient_light );
+    
     director.emit( next_emit, dictum_name );
   };
   idle_on_splash = async ( screenplay, dictum_name, next_emit, director )=>{

@@ -74,7 +74,7 @@ class ScreenDirector{
       logic_count = dictum.logic.length;
       for( let ndx=0; ndx<logic_count;ndx++ ){
         this.director.on( `${dictum_name}_idling`, async ()=>{
-          dictum.logic[ndx]( dictum_name, this.director, ndx )
+          dictum.logic[ndx]( this.screenplay, dictum_name, this.director, ndx )
         });
       }
 
