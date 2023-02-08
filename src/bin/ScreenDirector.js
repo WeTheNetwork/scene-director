@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { EventEmitter } from 'events';
-import { CSS3DRenderer } from '../lib/CSS3DRenderer.js';
+import { CSS3DRenderer, CSS3DObject } from '../lib/CSS3DRenderer.js';
 
 // The ScreenDirector //
 /* ------------------
@@ -22,7 +22,6 @@ class ScreenDirector{
   // GUI Interactions
   raycaster; mouse;
   onPointerDown = ( event )=> {
-
     this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
@@ -43,10 +42,6 @@ class ScreenDirector{
   // start_now: Whether to begin immediately once the ScreenDirector has been generated, or to wait for the .start() method call.
   constructor( screenplay, manifesto, start_now ){
     this.director = new EventEmitter();
-
-    // Listen to environmental changes, adjust accordingly.
-    window.addEventListener( 'pointerdown', this.onPointerDown );
-    window.addEventListener( 'resize', this.resize, { capture: true } );
 
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
@@ -72,11 +67,9 @@ class ScreenDirector{
       let logic_count = 0;
       if(!dictum.logic) throw new Error('Dictums must be logical.  Declare a void function at least.');   // Feedback for the Dictum writers.
       logic_count = dictum.logic.length;
-      for( let ndx=0; ndx<logic_count;ndx++ ){
-        this.director.on( `${dictum_name}_idling`, async ()=>{
-          dictum.logic[ndx]( this.screenplay, dictum_name, this.director, ndx )
-        });
-      }
+      this.director.on( `${dictum_name}_idling`, async ()=>{
+        dictum.logic[ 0 ]( this.screenplay, dictum_name, this.director, 0 );
+      });
 
       this.director.on( `${dictum_name}_progress`, async ( dictum_name, ndx )=>{
 
@@ -86,6 +79,8 @@ class ScreenDirector{
         dictum.progress.passed++;
         if( dictum.progress.completed === dictum.logic.length ) {
           this.director.emit( `${dictum_name}_end`, dictum_name );
+        } else {
+          this.director.emit( `next_logic`, dictum_name, ++ndx );
         }
 
       } );
@@ -98,6 +93,8 @@ class ScreenDirector{
         dictum.progress.failed++;
         if( dictum.progress.completed === dictum.logic.length ) {
           this.director.emit( `${dictum_name}_end`, dictum_name );
+        } else {
+          this.director.emit( `next_logic`, dictum_name, ++ndx );
         }
 
       } );
@@ -133,6 +130,14 @@ class ScreenDirector{
 
     });
 
+    // EventHandler 'next_dictum': When fired, increments the ScreenDirector to the next dictum, or past; emitting either that <dictum_name> event, or the 'manifesto_compete' event respectively.
+    this.director.on('next_logic', async ( dictum_name, ndx )=>{
+
+      let dictum = this.manifesto[ dictum_name ];
+      dictum.logic[ ndx ]( this.screenplay, dictum_name, this.director, ndx );
+
+    });
+
     // EventHandler 'prev_dictum': When fired, decrements the ScreenDirector to the previous dictum, until the first; emitting either that <dictum_name> event, or the 'first_dictum' event respectively.
     this.director.on('prev_dictum', async ()=>{
 
@@ -146,11 +151,21 @@ class ScreenDirector{
 
     });
 
+    // EventHandler 'next_dictum': When fired, increments the ScreenDirector to the next dictum, or past; emitting either that <dictum_name> event, or the 'manifesto_compete' event respectively.
+    this.director.on('goto_dictum', async ( dictum_name, from_dictum_name )=>{
+
+      this.manifesto[ from_dictum_name ].result.complete = true;
+      this.active_dictum = this.dictum_index.indexOf( dictum_name );
+      dictum_name = this.dictum_index[ this.active_dictum ];
+      this.director.emit( `${dictum_name}`, dictum_name );
+
+    });
+
     // EventHandler 'confirm_dictum': When fired, the ScreenDirector marks this dictum as confirmed, signalling that all dictums succeeded in their task.
     //                                Next, the 'next_dictum' event is fired to continue the production.
     this.director.on('confirm_dictum', async ( dictum_name )=>{
 
-      this.manifesto[dictum_name].result.complete = true;
+      this.manifesto[ dictum_name ].result.complete = true;
       this.director.emit('next_dictum');
 
     });
@@ -190,21 +205,23 @@ class Screenplay{
   active_cam;
   scene; ui_scene; renderer; ui_renderer;
   clock; delta; fps; interval; raycaster; mouse;
-
+  stop_me;
   animate = ()=>{
     requestAnimationFrame( this.animate );
     this.delta += this.clock.getDelta();
-    if (this.delta  > this.interval) {
+    if (this.delta  >= this.interval) {
+      let next_delta = this.delta % this.interval;
       this.update( this.delta );
       this.direct( this.delta );
       this.render();
       this.ui_render();
-      this.delta = this.delta % this.interval;
+      this.delta = next_delta;
     }
   }
   controls = {};
 
   // Grouping Arrays... Add models here to isolate unrelated items during processing (ie. Click / Tap events)
+  updatables_cache;  // Place the parameters for the like-named update routine into this Map for access during each run.
   updatables;  // Place objects which must have their '.update()' function run during the render phase.
   actives = [];
   interactives = [];  // Populate this with the rendered objects which the user may interact with... improving the efficiency of the Raycaster.
@@ -228,6 +245,7 @@ class Screenplay{
   }
 
   direct = ( delta )=>{
+    debugger;
     this.actives.forEach( ( active, name )=>{
       active.directions.forEach( ( direction, name )=>{
         direction( delta );
@@ -261,9 +279,8 @@ class Screenplay{
     this.clock = clock;
     let delta = 0;
     this.delta = delta;
-    let fps = 30;
-    let interval = 1 / fps;
-    this.interval = interval;
+    let fps = this.fps = 60;
+    let interval = this.interval = 1 / fps;
 
     // Mouse Interaction Capture
     const raycaster = new THREE.Raycaster();
@@ -271,35 +288,44 @@ class Screenplay{
     const mouse = new THREE.Vector2();
     this.mouse = mouse;
 
+    this.updatables_cache = new Map();
     this.updatables = new Map();
     this.cameras = new Map();
     this.active_cam = false;
     this.scene = new THREE.Scene();
-    this.ui_scene = new THREE.Scene();
     this.scene.updates = {
+      update: ()=>{},
+      cache: {}
+    };
+    this.ui_scene = new THREE.Scene();
+    this.ui_scene.updates = {
       update: ()=>{},
       cache: {}
     };
     this.updatables.set('scene', this.scene.updates );
 
+    // UI Renderer
+    const ui_renderer = new CSS3DRenderer( );
+    ui_renderer.setSize( window.innerWidth, window.innerHeight );
+    let ui_canvas = ui_renderer.domElement;
+    ui_canvas.id = 'ui';
+    document.body.appendChild( ui_canvas );
+    this.ui_renderer = ui_renderer;
+
     // Scene Renderer
-    const renderer = new THREE.WebGLRenderer( { antialias: true, physicallyCorrectLights: true } );
+    const renderer = new THREE.WebGLRenderer( { antialias: true, logarithmicDepthBuffer: true, physicallyCorrectLights: true } );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setPixelRatio( window.devicePixelRatio ? window.devicePixelRatio : 1 );
     let canvas = renderer.domElement;
+    canvas.id = 'theatre';
     document.body.appendChild( canvas );
     this.renderer = renderer;
 
-    // UI Renderer
-    const ui_renderer = new CSS3DRenderer( );
-    ui_renderer.setSize( window.innerWidth, window.innerHeight );
-    let ui_canvas = ui_renderer.domElement;
-    ui_canvas.style['background-color'] = 'transparent';
-    ui_canvas.style.position = 'fixed';
-    document.body.appendChild( ui_canvas );
-    this.ui_renderer = ui_renderer;
+    // Listen to environmental changes, adjust accordingly.
+    window.addEventListener( 'pointerdown', this.onPointerDown );  // This is the canvas raycast handler
+    window.addEventListener( 'resize', this.resize, { capture: true } );
   }
 }
 
@@ -314,8 +340,37 @@ class SceneAsset3D extends THREE.Object3D{
 
   constructor( obj3D = new THREE.Object3D() ){
     obj3D.directions = new Map();
-    obj3D.click = ()=>{};
     return obj3D;
+  }
+}
+
+// CSS3DAsset //
+/* ------------
+  In order to optimize the Animate() phase of the ScreenPlay, CSS3DAsset objects own the directions they will be performing... to be called on-demand by the ScreenDirector.
+  Analogous to an actor in real-life learning their part of the production... their Director then simply calls upon them to perform it when the time comes.
+*/
+class CSS3DAsset extends CSS3DObject{
+  directions;  // Override this with a custom set of functions to be called by the ScreenDirector during the Animate() run of the Screenplay.
+
+  constructor( element ){
+    let css3DObj = new CSS3DObject( element )
+    css3DObj.directions = new Map();
+    return css3DObj;
+  }
+}
+
+class SceneTransformation{
+  update = ()=>{}; // or Function()... depends on what you need the 'this' to refer to.
+  cache = {}; // This persists beyond each run of the .update() during render... holding the values.
+  post = ()=>{};  // same here
+  reset = ()=>{};
+
+  constructor( params ){
+    this.update = params.update;
+    this.setState = params.setState;
+    this.cache = params.cache;
+    this.post = params.post;
+    this.reset = params.reset;
   }
 }
 
@@ -394,4 +449,4 @@ class Manifesto{
 }
 
 
-export { ScreenDirector, Screenplay, SceneAsset3D, SceneDirections, Workflow, Dictum, Manifesto  };
+export { ScreenDirector, Screenplay, SceneAsset3D, CSS3DAsset, SceneTransformation, SceneDirections, Workflow, Dictum, Manifesto  };
