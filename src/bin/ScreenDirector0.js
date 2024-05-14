@@ -203,7 +203,7 @@ class Screenplay{
   sys_ve_renderer; sys_ui_renderer; page_ve_renderer; page_ui_renderer;
   sys_ve_post; sys_ui_post; page_ve_post; page_ui_post;
   sys_ve_composer = false; sys_ui_composer = false; page_ve_composer = false; page_ui_composer = false;
-  slo_mode = true; fps;
+  slo_mode = false; fps;
   clock; delta = 0; frame_delta = 0; heartbeat_delta = 0; qm_delta = 0; m_delta = 0; qh_delta = 0; hh_delta = 0; h_delta = 0; qd_delta = 0; hd_delta = 0; d_delta = 0;
   raycaster; mouse;
   stop_me;
@@ -472,14 +472,7 @@ class Screenplay{
     } else {
       this.SHOULD_SAVE = false;
     }
-    this.VIEW = {
-      fov: 45,
-      aspect: window.innerWidth / window.innerHeight,
-      near: 0.1,
-      far: 100000000000000,
-      major_dim: Math.max( window.innerWidth, window.innerHeight ),
-      minor_dim: Math.min( window.innerWidth, window.innerHeight )
-    };
+    this.VIEW = VIEW;
 
 
     // Display Dimensions
@@ -540,6 +533,11 @@ class Screenplay{
 
     this.user_cam = false;
 
+    this.ui_cam = new THREE.PerspectiveCamera( VIEW.fov, VIEW.aspect, VIEW.near, VIEW.far );
+    //this.ui_cam.position.set( 0, 0, VIEW.major_dim );
+    this.ui_cam.position.set( 0, 0, 9 );
+    this.ui_cam.setRotationFromEuler( new THREE.Euler( center_cam.rotation.x,center_cam.rotation.y,center_cam.rotation.z, 'XYZ' ) );
+
     this.sys_ve_scene = new THREE.Scene();
     this.sys_ve_scene.updates = {
       update: ()=>{},
@@ -591,7 +589,7 @@ class Screenplay{
     document.body.appendChild( suc );
 
     // Page Virtual Environment Renderer
-    const pvr = this.page_ve_renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true, outputEncoding: THREE.sRGBEncoding } );
+    const pvr = this.page_ve_renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
     pvr.setSize( window.innerWidth, window.innerHeight );
     pvr.setPixelRatio( window.devicePixelRatio ? window.devicePixelRatio : 1 );
     pvr.toneMapping = THREE.ACESFilmicToneMapping;
