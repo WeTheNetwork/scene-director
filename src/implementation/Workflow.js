@@ -1,83 +1,107 @@
 // Screen Director Reference
-import { Workflow as _Workflow } from '../bin/ScreenDirector.js';
+import { Workflow as _Workflow, SceneAsset3D, CSS3DAsset, SceneTransformation } from '../bin/ScreenDirector.js';
+// UI Library Reference
+import { ErrorBoundary, LoginForm } from '../imp/ui_core.js';
+// React Module Reference
+import { createRef, useState, useEffect, useRef, Component as oldComponent } from 'react';
+import ReactDOM from 'react-dom/client';
+import { createPortal } from 'react-dom';
 // Support Library Reference
-import GUI from 'lil-gui';
 import * as THREE from 'three';
-import { OrbitControls } from '../lib/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Workflow Implementation
 class Workflow extends _Workflow{
-  elevated_vars = {
-    "u_name": ""
-  }
+  react_app;
 
-  ActivateOrbitControls = async ( screenplay )=>{
-    if( !screenplay.controls.orbit_controls ) {
-      screenplay.controls.orbit_controls = new OrbitControls( screenplay.active_cam, screenplay.renderer.domElement );
-      screenplay.controls.orbit_controls.zoomSpeed = 4;
-      screenplay.controls.orbit_controls.enableDamping = true;
-      screenplay.controls.orbit_controls.saveState();
+    // Load and resume the user's experience ( @Time-Space Coordinates + difference )
+  resume_user = async ( projector, dictum_name, director, ndx ) => {
+    console.log('Workflow.resume_user');
+    document.title = 'resume_user | WeThe.Network';
+
+    const verifyToken = async ( uname, token ) => {
+      if( !uname && !token ) return false;
+
+      let resume = new Request("/tokens",{
+        method:"POST",
+        headers: {
+          "Content-Type": "application/json",
+          "username": uname.toString(),
+          "token": token.toString()
+        }
+      });
+
+      return await fetch( resume ).then( async res => {
+        let status = res.status;
+        if(status==200) return {
+          valid: true,
+          tokens: res.headers.get('token')
+        }
+        else return false
+      });
     }
 
-    screenplay.controls.orbit_controls.release_distance = 1 + screenplay.controls.orbit_controls.getDistance();
-    screenplay.updatables.set( 'controls', screenplay.controls.orbit_controls );
-    screenplay.active_cam.user_control = true;
-    screenplay.active_cam.updateProjectionMatrix();
-    screenplay.controls.orbit_controls.enabled = true;
-  }
+    let saving = ( director.CAN_SAVE && director.SHOULD_SAVE );
+    let validation = false;
+    let uname = '';
+    let token = '';
 
-  DeactivateOrbitControls = async ( screenplay )=>{
-    screenplay.controls.orbit_controls.reset();
-    screenplay.actions.change_cam( screenplay.active_cam.name );
-    screenplay.controls.orbit_controls.enabled = false;
-    screenplay.updatables.delete( 'controls' );
-    screenplay.active_cam.user_control = false;
-  }
+    if( saving ){
+      uname = ( typeof(localStorage.getItem("uname")) !== 'undefined' ) ? localStorage.getItem("uname") : false;
+      token = ( typeof(localStorage.getItem("token")) !== 'undefined' ) ? localStorage.getItem("token") : false;
+      validation = await verifyToken( uname, token );
+    }
+    await validation;
+    let auto_resumed = ( validation ) ? validation.valid: false;
+    let tokens = ( validation ) ? validation.tokens: false;
 
-  confirm_privileges = async ( screenplay, dictum_name, director, ndx ) => {
-    console.log('Workflow.confirm_privileges');
-    let proceed = window.confirm('Scene Director Loaded: "Shall we proceed?"');
-    if( proceed ) director.emit( `${dictum_name}_progress`, dictum_name, ndx );
-    else {
-      let patience = (Math.random() * 10) > 5 ? true : false;
-      if( !patience ){
-        window.alert( 'Out of patience... proceeding.' );
-        director.emit( `${dictum_name}_failure`, dictum_name, ndx );
-      } else {
-        director.emit( `${dictum_name}_progress`, dictum_name, ndx );
-      }
+    console.log( 'auto_resumed?: ', auto_resumed );
+    function ResumeUser( uname, token ){
+
+      let resume = new Request("/a",{
+        method:"POST",
+        headers: {
+          "Content-Type": "application/json",
+          "username": uname,
+          "token": token
+        },
+        body: ""
+      });
+      fetch( resume ).then( async res => {
+        // Fire the resume_user screenplay directions.
+        if( res.status == 200 ) director.emit( `${dictum_name}_resume_user`, dictum_name, [ await res.json() ] );
+
+        // Permissions Coordination
+        // Do an initial check to see what the notification permission state is
+        if (Notification.permission === 'denied' || Notification.permission === 'default') {
+          // TODO: Request permission if saved to do so... or NOT saved to not ask again.
+          // NOTE: As notifications will be useful to most users, a reminder request should be regularly sent out to users saved to Not Ask
+
+        } else {
+
+        }
+      });
+
+    }
+
+    if( !auto_resumed ){
+
+      this.react_app.render( <LoginForm director={director} projector={projector} dictum_name={dictum_name} ndx={ndx} /> );
+    } else {
+      ResumeUser( uname, token );
+      director.emit( `${dictum_name}_progress`, dictum_name, ndx );
     }
   };
-  verify_capabilities = async ( screenplay, dictum_name, director, ndx ) => {
-    console.log( 'Workflow.verify_capabilities' );
-    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then( stream => {
-        window.localStream = stream; // A
-        window.localAudio.srcObject = stream; // B
-        window.localAudio.autoplay = true; // C
-    }).catch( err => {
-        console.log("u got an error:" + err)
-    }).finally( _ => {
-      director.emit( `${dictum_name}_progress`, dictum_name, ndx );
-    });
-  };
-  introduction = async ( screenplay, dictum_name, director, ndx ) => {
-    console.log('Workflow.introduction');
-    window.alert( 'Howdy!  This is where I introduce myself.  Though it appears as though I am a basic page with archaic pop-up modals... I am actually an orchestrated set of directions which collaborate with the User Interface in order to perform elaborate animations during transitions; making it possible for you to create an immersive 3D worldscape for your online experience!' );
-    setTimeout( (dictum_name, director, ndx)=>{
-      director.emit( `${dictum_name}_progress`, dictum_name, ndx );
-    }, 5000, dictum_name, director, ndx );
-  };
-  user_introduction = async ( screenplay, dictum_name, director, ndx ) => {
-    console.log('Workflow.user_introduction');
-    let _x = this.elevated_vars.u_name = window.prompt( 'What name would you like to be known by?' );
-    this.elevated_vars.u_name = ( _x === null || _x.match(/[^\s]/gi) === null ) ? 'stranger' : _x;
+
+  init_controls = async ( projector, dictum_name, director, ndx ) => {
+    console.log('Workflow.init_controls');
     director.emit( `${dictum_name}_progress`, dictum_name, ndx );
+    this.react_app.render();
   };
-  ready_for_user = async ( screenplay, dictum_name, director, ndx ) => {
-    console.log('Workflow.ready_for_user');
-    window.alert( `Okay ${ this.elevated_vars.u_name }, now I'm ready for you.` );
-    director.emit( `${dictum_name}_progress`, dictum_name, ndx );
-  };
+
+  constructor( react_app ){
+    super( react_app );
+  }
 }
-
-export { Workflow }
+export default Workflow;

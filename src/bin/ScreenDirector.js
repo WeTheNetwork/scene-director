@@ -1,232 +1,439 @@
 import * as THREE from 'three';
-import { EventEmitter } from 'events';
-import { CSS3DRenderer } from '../lib/CSS3DRenderer.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { EventEmitter } from 'eventemitter3';
 
-// The ScreenDirector //
-/* ------------------
-  Aware of the environment ( Window, Document, User Interface API, SceneAssets ), to the extent necessary to create a seemlessly animated web interface.
-  Scenes are complex, orchestrated animations which are driven by the ScreenDirector to create a rich user experience for webapp interactions.
-  Use this to prepare the user-interface for interaction, then to drive the interaction through each entry in your site's manifesto.
-*/
-class ScreenDirector{
-  active_dictum = 0;  // State Awareness Variable
-  dictum_index = [];  // Track the dictums by name in an array for efficient iteration control.
-  director;
-  start = function(){
+// SpaceTime - The progression of temporal mechanics across the system.
+class SpaceTime{
+  clock;polls;
 
-    this.screenplay.animate();  // Kickstart the animation loop
-    this.director.emit('first_dictum');  // Begin the Manifesto
-
+  delta = 0; heartbeat_delta = 0; qm_delta = 0; m_delta = 0; qh_delta = 0; hh_delta = 0; h_delta = 0; qd_delta = 0; hd_delta = 0; d_delta = 0;
+  intervals = {
+    heartbeat: 0.6366,
+    qm: 15,
+    m: 60,
+    qh: 900,
+    hh: 1800,
+    h: 3600,
+    qd: 21600,
+    hd: 43200,
+    d: 86400
   }
-
-  // GUI Interactions
-  raycaster; mouse;
-  onPointerDown = ( event )=> {
-
-    this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-    this.raycaster.setFromCamera( this.mouse, this.screenplay.active_cam );
-    const intersects = (this.screenplay.interactives && this.screenplay.interactives.length > 0) ? this.raycaster.intersectObjects( this.screenplay.interactives, false ) : [];
-    if ( intersects.length > 0 ) {
-
-      // Capture the first clicked target
-      const object = intersects[ 0 ].object;
-      let pos = object.position;
-      object.click(); // Fire the object's internal click handler if any.
-
+  beat = ( delta )=>{
+    const beat_delta = delta;
+    this.heartbeat_delta += beat_delta;
+    this.qm_delta += beat_delta;
+    this.m_delta += beat_delta;
+    this.qh_delta += beat_delta;
+    this.hh_delta += beat_delta;
+    this.h_delta += beat_delta;
+    this.qd_delta += beat_delta;
+    this.hd_delta += beat_delta;
+    this.d_delta += beat_delta;
+    if ( this.heartbeat_delta  >= this.heartbeat_interval ) {
+      const next_delta = this.heartbeat_delta % this.heartbeat_interval;
+      this.heartbeat( this.heartbeat_delta );
+      this.heartbeat_delta = next_delta;
+      console.log( 'beat.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.qm_delta  >= this.qm_interval ) {
+      const next_delta = this.qm_delta % this.qm_interval;
+      this.poller.quarter_minute( this.qm_delta, 2 );
+      this.qm_delta = next_delta;
+      console.log( 'quarter_minute.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.m_delta  >= this.m_interval ) {
+      const next_delta = this.m_delta % this.m_interval;
+      this.poller.minute( this.m_delta, 3 );
+      this.m_delta = next_delta;
+      console.log( 'minute.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.qh_delta  >= this.qh_interval ) {
+      const next_delta = this.qh_delta % this.qh_interval;
+      this.poller.quarter_hour( this.qh_delta, 4 );
+      this.qh_delta = next_delta;
+      console.log( 'quarter_hour.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.hh_delta  >= this.hh_interval ) {
+      const next_delta = this.hh_delta % this.hh_interval;
+      this.poller.half_hour( this.hh_delta, 5 );
+      this.hh_delta = next_delta;
+      console.log( 'half_hour.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.h_delta  >= this.h_interval ) {
+      const next_delta = this.h_delta % this.h_interval;
+      this.poller.hour( this.h_delta, 6 );
+      this.h_delta = next_delta;
+      console.log( 'hour.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.qd_delta  >= this.qd_interval ) {
+      const next_delta = this.qd_delta % this.qd_interval;
+      this.poller.quarter_day( this.qd_delta, 7 );
+      this.qd_delta = next_delta;
+      console.log( 'quarter_day.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.hd_delta  >= this.hd_interval ) {
+      const next_delta = this.hd_delta % this.hd_interval;
+      this.poller.half_day( this.hd_delta, 8 );
+      this.hd_delta = next_delta;
+      console.log( 'half_day.. next @ ' + next_delta + 'latest delta: ' + delta );
+    }
+    if ( this.d_delta  >= this.d_interval ) {
+      const next_delta = this.d_delta % this.d_interval;
+      this.poller.day( this.d_delta, 9 );
+      this.d_delta = next_delta;
+      console.log( 'day.. next @ ' + next_delta + 'latest delta: ' + delta );
     }
   }
+  poller = {
+    quarter_minute: ( delta )=>{
+      this.polls.quarter_minute.forEach(( poll, name )=>{
+        try { poll.update( delta, 2 ) } catch(e) { console.error( e ) };
+      });
+    },
+    minute: ( delta )=>{
+      this.polls.minute.forEach(( poll, name )=>{
+        try { poll.update( delta, 3 ) } catch(e) { console.error( e ) };
+      });
+    },
+    quarter_hour: ( delta )=>{
+      this.polls.quarter_hour.forEach(( poll, name )=>{
+        try { poll.update( delta, 4 ) } catch(e) { console.error( e ) };
+      });
+    },
+    half_hour: ( delta )=>{
+      this.polls.half_hour.forEach(( poll, name )=>{
+        try { poll.update( delta, 5 ) } catch(e) { console.error( e ) };
+      });
+    },
+    hour: ( delta )=>{
+      this.polls.hour.forEach(( poll, name )=>{
+        try { poll.update( delta, 6 ) } catch(e) { console.error( e ) };
+      });
+    },
+    quarter_day: ( delta )=>{
+      this.polls.quarter_day.forEach(( poll, name )=>{
+        try { poll.update( delta, 7 ) } catch(e) { console.error( e ) };
+      });
+    },
+    half_day: ( delta )=>{
+      this.polls.half_day.forEach(( poll, name )=>{
+        try { poll.update( delta, 8 ) } catch(e) { console.error( e ) };
+      });
+    },
+    day: ( delta )=>{
+      this.polls.day.forEach(( poll, name )=>{
+        try { poll.update( delta, 9 ) } catch(e) { console.error( e ) };
+      });
+    }
 
-  // screenplay: This object contains the lights, cameras, ations... actors, directions, etc... to run the scene.
-  // manifesto: The orchestrated performance of an animated THREE.js environment and the workflow of a web app.
-  // start_now: Whether to begin immediately once the ScreenDirector has been generated, or to wait for the .start() method call.
-  constructor( screenplay, manifesto, start_now ){
-    this.director = new EventEmitter();
+  }
 
-    // Listen to environmental changes, adjust accordingly.
-    window.addEventListener( 'pointerdown', this.onPointerDown );
-    window.addEventListener( 'resize', this.resize, { capture: true } );
+  constructor(){
+    this.clock = new THREE.Clock();
+    this.polls = {
+      quarter_minute: new Map(),
+      minute: new Map(),
+      quarter_hour: new Map(),
+      half_hour: new Map(),
+      hour: new Map(),
+      quarter_day: new Map(),
+      half_day: new Map(),
+      day: new Map()
+    }
+  }
+}
 
-    this.raycaster = new THREE.Raycaster();
-    this.mouse = new THREE.Vector2();
+// The ScreenDirector - Engine for orchestrating the logic and aesthetics of the system. //
+class ScreenDirector extends EventEmitter {
+    CAN_SAVE; SHOULD_SAVE;
+    projector; manifesto; screenplay;
+    active_dictum = 0;
+    dictum_index = [];
 
-    this.screenplay = screenplay;
-    this.manifesto = manifesto;
+    /* Handle PopState events to trigger page navigation in response to History Navigation (Back/Forward buttons)  */
+    postPopState = () => {
+      // TODO: Update the nav bar, load content.
+    }
 
-    // Iterate through the provided dictums, generating event-handing pathways to progress through the manifesto.
-    for (const dictum_name in this.manifesto) {
-
-      this.dictum_index.push(dictum_name);
-      let dictum = this.manifesto[dictum_name];
+    Add_Dictum = function( dictum_name, dictum ){
 
       // EventHandler <dictum_name>: When fired, executes the designated functions in order, reporting the progress to the <dictum_name>_progress eventhandler.
-      this.director.on( `${dictum_name}`, async ()=>{
-        this.manifesto[ dictum_name ].directions.on_enter( this.screenplay, dictum_name, `${dictum_name}_entered`, this.director );
+      this.on( `${dictum_name}`, async ()=>{
+        this.manifesto.dictums.get( dictum_name ).directions.on_enter( this.projector, dictum_name, `${dictum_name}_entered`, this );
       });
-      this.director.on( `${dictum_name}_entered`, async ()=>{
-        this.manifesto[ dictum_name ].directions.on_idle( this.screenplay, dictum_name, `${dictum_name}_idling`, this.director );
+      this.on( `${dictum_name}_entered`, async ()=>{
+        this.manifesto.dictums.get( dictum_name ).directions.on_idle( this.projector, dictum_name, `${dictum_name}_idling`, this );
       });
 
       // Run the dictum logic
       let logic_count = 0;
       if(!dictum.logic) throw new Error('Dictums must be logical.  Declare a void function at least.');   // Feedback for the Dictum writers.
       logic_count = dictum.logic.length;
-      for( let ndx=0; ndx<logic_count;ndx++ ){
-        this.director.on( `${dictum_name}_idling`, async ()=>{
-          dictum.logic[ndx]( this.screenplay, dictum_name, this.director, ndx )
-        });
-      }
+      this.on( `${dictum_name}_idling`, async ()=>{
+        dictum.logic[ 0 ]( this.projector, dictum_name, this, 0 );
+      });
 
-      this.director.on( `${dictum_name}_progress`, async ( dictum_name, ndx )=>{
+      this.on( `${dictum_name}_progress`, async ( dictum_name, ndx )=>{
 
-        let dictum = this.manifesto[ dictum_name ];
-        dictum.directions.on_progress( this.screenplay );
+        let dictum = this.manifesto.dictums.get( dictum_name );
+        dictum.directions.on_progress( this.projector, dictum_name, ndx );
         dictum.progress.completed++;
         dictum.progress.passed++;
-        if( dictum.progress.completed === dictum.logic.length ) {
-          this.director.emit( `${dictum_name}_end`, dictum_name );
+        if( dictum.progress.completed >= dictum.logic.length ) {
+          this.emit( `${dictum_name}_end`, dictum_name );
+        } else {
+          this.emit( `next_logic`, dictum_name, ++ndx );
         }
 
       } );
 
-      this.director.on( `${dictum_name}_failure`, async ( dictum_name, ndx )=>{
+      this.on( `${dictum_name}_failure`, async ( dictum_name, ndx )=>{
 
-        let dictum = this.manifesto[dictum_name];
-        dictum.directions.on_failure( this.screenplay );
+        let dictum = this.manifesto.dictums.get( dictum_name );
+        dictum.directions.on_failure( this.projector, dictum_name, ndx );
         dictum.progress.completed++;
         dictum.progress.failed++;
         if( dictum.progress.completed === dictum.logic.length ) {
-          this.director.emit( `${dictum_name}_end`, dictum_name );
+          this.emit( `${dictum_name}_end`, dictum_name );
+        } else {
+          this.emit( `next_logic`, dictum_name, ++ndx );
         }
 
       } );
 
-      this.director.on( `${dictum_name}_end`, async ( dictum_name )=>{
+      this.on( `${dictum_name}_end`, async ( dictum_name )=>{
 
-        let dictum = this.manifesto[dictum_name];
+        let dictum = this.manifesto.dictums.get( dictum_name );
         let next_emit = (dictum.progress.failed > 0) ? 'fail_dictum' : `confirm_dictum`;
-        this.manifesto[ dictum_name ].directions.on_end( this.screenplay, dictum_name, next_emit, this.director ) ;
+        this.manifesto.dictums.get( dictum_name ).directions.on_end( this.projector, dictum_name, next_emit, this ) ;
       } );
 
+      if( dictum.hooks){
+        for ( const hook_name in dictum.hooks ){
+
+          this.on( `${dictum_name}_${hook_name}`, async ( dictum_name, params )=>{
+
+            let dictum = this.manifesto.dictums.get( dictum_name );
+            dictum.directions.hooks[ dictum_name ]( this.projector, dictum_name, params );
+          } );
+
+        }
+      }
     }
 
-    /* Static, Internal Event Functions */
-    // EventHandler 'first_dictum': When fired, begins the process by setting the ScreenDirector to the first dictum, then emitting that event immediately.
-    this.director.on('first_dictum', async ()=>{
+    constructor( screenplay, manifesto, root, projector ) {
+        super();
+        this.screenplay = screenplay;
+        this.projector = projector;
 
-      let dictum_name = this.dictum_index[ 0 ];
-      this.director.emit( `${dictum_name}`, dictum_name );
+        this.CAN_SAVE = ( typeof(Storage) !== "undefined" && typeof( window.indexedDB ) !== "undefined" ) || false;
+        if( this.CAN_SAVE ){
+          let should = localStorage.getItem("should_save") || true; // Defaults to true, false must be explicitly saved to take affect.
+          this.SHOULD_SAVE = should;
+        } else {
+          this.SHOULD_SAVE = false;
+        }
 
-    });
 
-    // EventHandler 'next_dictum': When fired, increments the ScreenDirector to the next dictum, or past; emitting either that <dictum_name> event, or the 'manifesto_compete' event respectively.
-    this.director.on('next_dictum', async ()=>{
+        window.addEventListener("popstate", (event) => {
+          setTimeout(postPopState, 0); // Running this way ensures last-on the processing stack... ensuring a more predictable page state every time.
+        });
 
-      this.active_dictum++;
-      let dictum_name = this.dictum_index[ this.active_dictum ];
-      if( this.active_dictum < this.dictum_index.length ){
-        this.director.emit( `${dictum_name}`, dictum_name );
-      } else {
-        this.director.emit( 'manifesto_complete' );
-      }
+        this.manifesto = manifesto;
 
-    });
+        // Iterate through the provided dictums, generating event-handling pathways to progress through the manifesto.
+        let dictum_names = this.dictum_index = this.manifesto.dictums.keys().toArray();
+        for ( const dictum_name of dictum_names ) {
 
-    // EventHandler 'prev_dictum': When fired, decrements the ScreenDirector to the previous dictum, until the first; emitting either that <dictum_name> event, or the 'first_dictum' event respectively.
-    this.director.on('prev_dictum', async ()=>{
+          let dictum = this.manifesto.dictums.get( dictum_name );
+          this.Add_Dictum( dictum_name, dictum );
+        }
 
-      this.active_dictum--;
-      let dictum_name = this.dictum_index[ this.active_dictum ];
-      if(this.active_dictum > 0){
-        this.director.emit( `${dictum_name}`, dictum_name );
-      } else {
-        this.director.emit( 'first_dictum' );
-      }
+        this.on('first_dictum', async ()=>{
 
-    });
+          let dictum_name = this.dictum_index[ 0 ];
+          this.emit( `${dictum_name}`, dictum_name );
 
-    // EventHandler 'confirm_dictum': When fired, the ScreenDirector marks this dictum as confirmed, signalling that all dictums succeeded in their task.
-    //                                Next, the 'next_dictum' event is fired to continue the production.
-    this.director.on('confirm_dictum', async ( dictum_name )=>{
+        });
 
-      this.manifesto[dictum_name].result.complete = true;
-      this.director.emit('next_dictum');
+        this.on('next_dictum', async ()=>{
 
-    });
+          this.active_dictum++;
+          let dictum_name = this.dictum_index[ this.active_dictum ];
+          if( this.active_dictum < this.dictum_index.length ){
+            this.emit( `${dictum_name}`, dictum_name );
+          } else {
+            this.emit( 'manifesto_complete' );
+          }
 
-    // EventHandler 'fail_dictum':  When fired, the ScreenDirector marks this dictum as failed, signalling that one or more dictums have not failed in their task.
-    //                              Next, the 'next_dictum' event is fired to continue the production.
-    this.director.on('fail_dictum', async ( dictum_name )=>{
+        });
 
-      if(this.manifesto[dictum_name].result.fok) this.director.emit('next_dictum');
-      else this.director.emit(`${dictum_name}`, dictum_name);
+        this.on('next_logic', async ( dictum_name, ndx )=>{
 
-    });
+          let dictum = this.manifesto.dictums.get( dictum_name );
+          dictum.logic[ ndx ]( this.projector, dictum_name, this, ndx );
 
-    // EventHandler 'manifesto_compete': When fired, the ScreenDirector takes a bow... idles to wait for more... or even closes if so desired.
-    this.director.on('manifesto_complete', async function(){
+        });
 
-      // TODO: Take a bow | clean up after yourself.
+        this.on('prev_dictum', async ()=>{
 
-    });
+          this.active_dictum--;
+          let dictum_name = this.dictum_index[ this.active_dictum ];
+          if(this.active_dictum > 0){
+            this.emit( `${dictum_name}`, dictum_name );
+          } else {
+            this.emit( 'first_dictum' );
+          }
 
-    this.director.on('error', async function(){}); /* Best Practice: Node exits if not declared and an unhandled 'error' event is thrown. */
+        });
 
-    // Kick off the first dictum now that initialization has completed.
-    if(start_now) this.start();
+        this.on('goto_dictum', async ( dictum_name )=>{
 
+          this.active_dictum = this.dictum_index.indexOf( dictum_name );
+          dictum_name = this.dictum_index[ this.active_dictum ];
+          this.emit( `${dictum_name}`, dictum_name );
+
+        });
+
+        this.on('confirm_dictum', async ( dictum_name )=>{
+
+          this.manifesto.dictums.get( dictum_name ).result.complete = true;
+          this.emit('next_dictum');
+
+        });
+
+        this.on('fail_dictum', async ( dictum_name )=>{
+
+          if(this.manifesto.dictums.get( dictum_name ).result.fok) this.emit('next_dictum');
+          else this.emit(`${dictum_name}`, dictum_name);
+
+        });
+
+        this.on('manifesto_complete', async function(){
+
+          /* This doesn't necessarily have to happen.
+            It fires when the last dictum is completed...
+            though new ones may be added as desired. */
+
+        });
+
+        this.on('error', async function(){});
+
+        this.projector.animate();
+        this.emit('first_dictum');  // Begin the Manifesto
+    }
+}
+
+
+// Manifesto - The strategy for implementing the Screenplay and Workflow. //
+class Manifesto{
+  dictums;
+  constructor( screenplay, workflow ){
+    this.dictums = new Map();
   }
 }
 
-// Screenplay //
-/* ----------
-  As one might read a screenplay for a production in real-life, the ScreenDirector may learn the Screenplay provided to know how to progress the scene in tandem
-  with the user interface's workflow, referred to as the Manifesto.  The Screenplay owns the SceneAssets which it will be referring to during run-time, as well as
-  the SceneDirections which tell them what to be doing.
-*/
-class Screenplay{
-  ENTIRE_SCENE = 0;
-  active_cam;
-  scene; ui_scene; renderer; ui_renderer;
-  clock; delta; fps; interval; raycaster; mouse;
+// Projector - The mechanics of presenting a multi-layered spatial environment projection. //
+class Projector{
+  root;
+  space_time; enable_vr;
+  env_scene; env_renderer;
+  ui_scene; ui_renderer;
+  active_cam; ui_cam; view; controls;
+  lil_gui;
+  // TODO: Add composer to the environmental render (if device is capable).
+  env_post = false; ui_post = false; env_composer = false; ui_composer = false;
 
+  delta = 0;
+  fps = 60; frame_interval = 1 / 60;  // Standard Value Default.
   animate = ()=>{
     requestAnimationFrame( this.animate );
-    this.delta += this.clock.getDelta();
-    if (this.delta  > this.interval) {
-      this.update( this.delta );
+    const delta = this.space_time.clock.getDelta();
+    this.space_time.beat( delta );
+    this.delta += delta;
+    if ( this.delta  >= this.frame_interval ) {
+      let next_delta = this.delta % this.frame_interval;
+      this.update( this.delta, 0 );
       this.direct( this.delta );
-      this.render();
-      this.ui_render();
-      this.delta = this.delta % this.interval;
+      this.render_env();
+      this.render_ui();
+
+      this.delta = next_delta;
     }
   }
-  controls = {};
 
-  // Grouping Arrays... Add models here to isolate unrelated items during processing (ie. Click / Tap events)
-  updatables;  // Place objects which must have their '.update()' function run during the render phase.
-  actives = [];
-  interactives = [];  // Populate this with the rendered objects which the user may interact with... improving the efficiency of the Raycaster.
+  // GUI Interactions
+  raycaster; mouse; interactives;
+  onPointerDown = ( event )=> {
 
-  actors = {};  // Actors are SceneAsset3D objects which are defined with callable directions, whether cosmetic or complex routines, called by the ScreenDirector during Animate().
+    this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-  // Standard-Issue Hollywood Magic Makers
-  lights = {};  // Any scene needs light to be... seen.
-  cameras; // Multiple cameras are able to be defined, thus called upon by the ScreenDirector.
-  actions = {}; // Scene-wide actions are defined here... ie. "Camera Shake", "Perspective Morph", "Scene Cut Transitions".
+    // TODO: Redo this for the new camera setup
+    this.raycaster.setFromCamera( this.mouse, this.active_cam );
+    const intersects = (this.interactives && this.interactives.length > 0) ? this.raycaster.intersectObjects( this.interactives, false ) : [];
+    if ( intersects.length > 0 ) {
 
-  stage = {}; // This is the placeholder for the stage if created... though a stage is never required.
-  backgroundScenery = {};  // This is the placeholder for the background if created... though it is also not required.
-  sceneBackground = {}  // Use this to create a Three.CubeCamera as a skybox... be sure to update the skybox camera during the render phase.
+      // Capture the first clicked target
+      const object = intersects[ 0 ].object;
+      let pos = object.position;
+      if( object.click ) object.click(); // Fire the object's internal click handler if any.
 
-  // Rendering & Update Logic
-  update = ( delta )=>{
-    this.updatables.forEach(( updatable, name )=>{
-      if ( updatable.update ) updatable.update( delta );
-    });
+    }
+
+  }
+  onResize = ( event )=> {
+    this.reset_view();
+    this.active_cam.updateProjectionMatrix();
+    this.ui_cam.updateProjectionMatrix();
   }
 
+  setEnvSkyCube = async ( cubeTextureSet )=>{
+    // NOTE: Currently overriden with WeThe System textures.
+    const loader = new THREE.CubeTextureLoader();
+    loader.setPath( 'textures/environment/' );
+    let textureCube = await loader.load( cubeTextureSet );
+    this.env_scene.background = textureCube;
+  };
+
+  render_env = ()=>{
+    if( this.env_post && this.env_composer ){
+      this.env_composer.render(); // TODO: Implement this once ready to add visual complexity.
+    } else {
+      this.env_renderer.render( this.env_scene, this.active_cam );
+  	}
+  }
+  render_ui = ()=>{
+    if(this.ui_post && this.ui_composer){
+      this.ui_composer.render();
+    } else{
+      this.ui_renderer.render( this.ui_scene, this.ui_cam );
+  	}
+  }
+  reset_view = () =>{
+    this.view = {};
+    this.view.fov = 90;
+    this.view.near = 0.1;
+    this.view.far = 4487936120730, // 30 AU to see the sun from up to the inner edge of the Kuiper Belt
+    this.view.aspect = window.innerWidth / window.innerHeight;
+    this.view.major_dim = Math.max( this.view.height, this.view.width );
+    this.view.minor_dim = Math.min( this.view.height, this.view.width );
+    this.view.height = window.innerHeight;
+    this.view.width = window.innerWidth;
+    if(this.active_cam) this.active_cam.aspect = this.view.aspect;
+    if(this.ui_cam) this.ui_cam.aspect = this.view.aspect;
+    if(this.env_renderer) this.env_renderer.setSize( this.view.width, this.view.height );
+    if(this.ui_renderer) this.ui_renderer.setSize( this.view.width, this.view.height );
+  }
+
+  updatables;
+  update = ( delta )=>{
+    this.updatables.forEach(( updatable, name )=>{
+      if ( updatable.update ) updatable.update( delta, 0 );
+    });
+  };
+
+  actives = [];
   direct = ( delta )=>{
     this.actives.forEach( ( active, name )=>{
       active.directions.forEach( ( direction, name )=>{
@@ -235,134 +442,157 @@ class Screenplay{
     } );
   }
 
-  render = ()=>{
-    this.renderer.render( this.scene, this.active_cam );
-  }
+  constructor( root ){
+    this.root = root;
+    window.addEventListener( 'pointerdown', this.onPointerDown );
+    window.addEventListener( 'resize', this.onResize, { capture: true } );
 
-  ui_render = ()=>{
-    this.ui_renderer.render( this.ui_scene, this.active_cam );
-  }
-
-  // Handle Viewscreen Changes
-  resize = ()=> {
-    let aspect = window.innerWidth / window.innerHeight;
-    let active_cam = this.active_cam;
-    active_cam.aspect = aspect;
-    active_cam.updateProjectionMatrix();
-    this.renderer.setSize( window.innerWidth, window.innerHeight );
-    this.ui_renderer.setSize( window.innerWidth, window.innderHeight );
-  }
-
-  constructor( ){
-
-    // Internal Clock
-    // TODO: Set this to a configuration value
-    const clock = new THREE.Clock();
-    this.clock = clock;
-    let delta = 0;
-    this.delta = delta;
-    let fps = 30;
-    let interval = 1 / fps;
-    this.interval = interval;
-
-    // Mouse Interaction Capture
-    const raycaster = new THREE.Raycaster();
-    this.raycaster = raycaster;
-    const mouse = new THREE.Vector2();
-    this.mouse = mouse;
-
+    this.reset_view();
+    this.space_time = new SpaceTime();
     this.updatables = new Map();
-    this.cameras = new Map();
-    this.active_cam = false;
-    this.scene = new THREE.Scene();
-    this.ui_scene = new THREE.Scene();
-    this.scene.updates = {
+    this.interactives = [];
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    this.env_scene = new THREE.Scene();
+    this.env_scene.updates = {
       update: ()=>{},
       cache: {}
     };
-    this.updatables.set('scene', this.scene.updates );
+    this.updatables.set('env_scene', this.env_scene.updates );
+    this.ui_scene = new THREE.Scene();
+    this.ui_scene.updates = {
+      update: ()=>{},
+      cache: {}
+    };
+    this.updatables.set('ui_scene', this.ui_scene.updates );
 
-    // Scene Renderer
-    const renderer = new THREE.WebGLRenderer( { antialias: true, physicallyCorrectLights: true } );
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.setPixelRatio( window.devicePixelRatio ? window.devicePixelRatio : 1 );
-    let canvas = renderer.domElement;
-    document.body.appendChild( canvas );
-    this.renderer = renderer;
+    const envr = this.env_renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      logarithmicDepthBuffer: true
+    });
 
-    // UI Renderer
-    const ui_renderer = new CSS3DRenderer( );
-    ui_renderer.setSize( window.innerWidth, window.innerHeight );
-    let ui_canvas = ui_renderer.domElement;
-    ui_canvas.style['background-color'] = 'transparent';
-    ui_canvas.style.position = 'fixed';
-    document.body.appendChild( ui_canvas );
-    this.ui_renderer = ui_renderer;
+    envr.shadowMap.enabled = true;
+    envr.shadowMap.type = THREE.PCFSoftShadowMap; // Ensuring soft shadows for realism
+
+    envr.toneMapping = THREE.ACESFilmicToneMapping;
+    envr.toneMappingExposure = 1.2; // Adjusting exposure slightly for better highlights
+
+    envr.physicallyCorrectLights = true; // Ensuring realistic light behavior
+
+    envr.setSize(window.innerWidth, window.innerHeight);
+    envr.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
+    envr.xr.enabled = this.enable_vr;
+
+    // Setting background color to match Lower Decks aesthetic
+    envr.setClearColor(0x20232a);
+
+    let envc = envr.domElement;
+    envc.id = 'env_canvas';
+    document.body.appendChild(envc);
+
+    // Additional configuration for solar system scale scene
+    const pmremGenerator = new THREE.PMREMGenerator(envr);
+    pmremGenerator.compileEquirectangularShader(); // Prepares renderer for HDR environments
+
+
+    // User Interface Renderer
+    const uir = this.ui_renderer = new CSS3DRenderer( );
+    uir.setSize( window.innerWidth, window.innerHeight );
+    let uic = uir.domElement;
+    uic.id = 'ui_canvas';
+    document.body.appendChild( uic );
+
+    // Camera & Controls Setup
+    let center_cam = new THREE.PerspectiveCamera( this.view.fov, this.view.aspect, this.view.near, this.view.far );
+    center_cam.position.set( 0, 0, 0 );
+    //center_cam.lookAt( new THREE.Vector3() );
+    center_cam.updateProjectionMatrix();
+    this.active_cam = center_cam;
+
+    this.ui_cam = new THREE.PerspectiveCamera( this.view.fov, this.view.aspect, this.view.near, this.view.far );
+    //this.ui_cam.position.set( 0, 0, this.view.major_dim );
+    this.ui_cam.position.set( 0, 0, 9 );
+    this.ui_cam.setRotationFromEuler( new THREE.Euler( center_cam.rotation.x,center_cam.rotation.y,center_cam.rotation.z, 'XYZ' ) );
+    this.reset_view();
   }
 }
 
-// SceneAsset3D //
-/* ------------
-  In order to optimize the Animate() phase of the ScreenPlay, SceneAsset3D objects own the directions they will be performing... to be called on-demand by the ScreenDirector.
-  Analogous to an actor in real-life learning their part of the production... their Director then simply calls upon them to perform it when the time comes.
-*/
+// SceneTransformation - Scripted animation templates run by the system.
+class SceneTransformation{
+  compile = ()=>{} // This is the computational run, which defines the frames which are then stacked and run by update();
+  update = ()=>{}; // or Function()... depends on what you need the 'this' to refer to.
+  cache = {}; // This persists beyond each run of the .update() during render... holding the values.
+  post = ()=>{};  // same here
+  reset = ()=>{};
+
+  constructor( params ){
+    this.compile = params.compile;
+		this.update = params.update;
+		this.cache = params.cache;
+		this.post = params.post;
+		this.reset = params.reset;
+
+		// Migrate the engine functions into the base SceneTransformation object, for access to 'this'.
+		for (const func in params) {
+		  if (Object.hasOwn(params, func)) {
+				if (func=="update" || func=="cache" || func=="post" || func=="reset" ){}
+				else{
+					this[func]=params[func];
+				}
+		  }
+		}
+  }
+}
+
+// Screenplay - The aesthetics and visual interactions of the UI. //
+class Screenplay{
+  lighting; cameras; scenes; actions; directions; models; projector;
+
+  constructor( _projector ){
+    let projector = this.projector = _projector;
+    this.lighting = new Map();
+    this.cameras = new Map();
+
+    // Camera & Controls Setup
+    let center_cam = new THREE.PerspectiveCamera( projector.view.fov, projector.view.aspect, projector.view.near, projector.view.far );
+    center_cam.position.set( 0, 0, 9 );
+    center_cam.lookAt( new THREE.Vector3() );
+    center_cam.updateProjectionMatrix();
+    this.cameras.set('Center',  center_cam);
+    projector.active_cam = this.cameras.get( 'Center' );
+
+    let dolly_cam = center_cam.clone();
+    this.cameras.set('Dolly', dolly_cam );
+
+    this.ui_cam = new THREE.PerspectiveCamera( projector.view.fov, projector.view.aspect, projector.view.near, projector.view.far );
+    //this.ui_cam.position.set( 0, 0, this.view.major_dim );
+    this.ui_cam.position.set( 0, 0, 9 );
+    this.ui_cam.setRotationFromEuler( new THREE.Euler( center_cam.rotation.x,center_cam.rotation.y,center_cam.rotation.z, 'XYZ' ) );
+
+  }
+}
+
 class SceneAsset3D extends THREE.Object3D{
   directions;  // Override this with a custom set of functions to be called by the ScreenDirector during the Animate() run of the Screenplay.
   click = ()=>{};
 
   constructor( obj3D = new THREE.Object3D() ){
     obj3D.directions = new Map();
-    obj3D.click = ()=>{};
     return obj3D;
   }
 }
 
-// SceneDirections //
-/* ---------------
-  Directions are declared as child functions of this object upon instantiation... and are defined entirely by the user.
-  // NOTE: Without any standardized functionality to declare, and no run-time construction requirements, a commented-out example is necessary to understand the expected syntax.
-*/
-class SceneDirections{
-  //  Example Declaration Template //
-  /*  ----------------------------
-
-      enter_splash = async (screenplay)=>{
-        --> Reveal Splash Display... make it look nice.
-      };
-      progress_splash = async (scene)=>{
-        --> Show that progress has been made... simple feedback is all.
-      };
-      idle_on_splash = async (scene)=>{
-        --> Do this while waiting for the user to confirm and continue on... should prompt for interaction
-      };
-      end_splash = async (scene)=>{
-        --> Prepare the scene to begin the next step... make the splash disappear.
-      };
-      ready_for_anything = async (scene)=>{
-        --> Lights up, scenery set... ready to do something!  Happy Directing, and 'break a leg'!
-      };
-
-  */
-}
-
-// Workflow //
-/* --------
-  This is where the application logic is located, to be called by the ScreenDirector as defined by the Manifesto.
-  // NOTE: Without any standardized functionality to declare, and no run-time construction requirements, a commented-out example is necessary to understand the expected syntax.
-*/
+// Workflow - The logic and pipelines interactions of the UI. //
 class Workflow{
 
-  constructor(){
+
+
+  constructor( react_app ){
+    this.react_app = react_app;
   }
 }
 
-// Dictum //
-/* ------
-  The formal representation for a set of directions to coordinate alongside the logic algorithms of the WorkFlow.
-  Tracking the success or failure of the Dictum is included within on construction... defining what to do upon each outcome.
-*/
+// Dictum - Analagous to a work pipeline, defining the roles for the UI & environment. //
 class Dictum{
 
   // logic: Passed on by the Manifesto from it's own construction
@@ -384,14 +614,4 @@ class Dictum{
   }
 }
 
-// Manifesto //
-/* ---------
-  Literally a public declaration of intentions, this object is knit together by you ( the developer ), using the instantiated SceneDirections & Workflow objects.
-*/
-class Manifesto{
-  // NOTE: Though this constructor is not implemented, it is relevent to keep this for an explicit understanding of what is expected by the developer employing this solution.
-  constructor( scene_directions, workflow ){}
-}
-
-
-export { ScreenDirector, Screenplay, SceneAsset3D, SceneDirections, Workflow, Dictum, Manifesto  };
+export { ScreenDirector, Projector, Screenplay, SceneAsset3D, SceneTransformation, Workflow, Dictum, Manifesto  };
